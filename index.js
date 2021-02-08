@@ -4,8 +4,6 @@ const irisSdk = require('irishub-sdk-js')
 const {keyDAO} = require('./KeyDAO')
 const http = require('http')
 const app = express()
-const dotenv = require('dotenv');
-dotenv.config();
 let addressArr = []
 const {
 	COSMOS_NODE,
