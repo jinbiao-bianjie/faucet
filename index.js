@@ -5,6 +5,14 @@ const {keyDAO} = require('./KeyDAO')
 const http = require('http')
 const app = express()
 let addressArr = []
+app.all('*', function (req, res, next) {
+	res.header('Access-Control-Allow-Origin', '*');
+	//Access-Control-Allow-Headers ,可根据浏览器的F12查看,把对应的粘贴在这里就行
+	res.header('Access-Control-Allow-Headers', 'Content-Type');
+	res.header('Access-Control-Allow-Methods', '*');
+	res.header('Content-Type', 'application/json;charset=utf-8');
+	next();
+});
 const {
 	COSMOS_NODE,
 	IRIS_NODE,
@@ -58,10 +66,12 @@ const irisAddress = irisClient.keys.recover('irisKey',PASSWORD,IRIS_MNEMONIC_WOR
 const cosmosBaseTx = {
 	from: cosmosAddress,
 	password:PASSWORD,
+	mode:'async'
 }
 const irisBaseTx = {
 	from: irisAddress,
 	password:PASSWORD,
+	mode:'async'
 }
 let time = 0
 
@@ -86,15 +96,14 @@ async function sentBanlance (addressObj) {
 		).then(res => {
 			if(res.hash){
 				addressArr.pop()
-			}else {
-				time++
-				if(time < 3){
-					sentBanlance(addressObj.address)
-				}else {
-					time = 0
-				}
 			}
 		}).catch(e => {
+			time++
+			if(time < 3){
+				sentBanlance(addressObj.address)
+			}else {
+				time = 0
+			}
 			console.log(e,'cosmos send tx failed')
 			
 		})
@@ -109,15 +118,14 @@ async function sentBanlance (addressObj) {
 		).then(res => {
 			if(res.hash){
 				addressArr.pop()
-			}else {
-				time++
-				if(time < 3){
-					sentBanlance(addressObj.address)
-				}else {
-					time = 0
-				}
 			}
 		}).catch(e => {
+			time++
+			if(time < 3){
+				sentBanlance(addressObj.address)
+			}else {
+				time = 0
+			}
 			console.log(e,'iris send tx failed')
 		})
 	}
@@ -128,3 +136,4 @@ async function sentBanlance (addressObj) {
 app.listen(3000, () => {
 	console.log('Example app listening on port 3000!')
 })
+
