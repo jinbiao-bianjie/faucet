@@ -4,7 +4,7 @@ const irisSdk = require('irishub-sdk-js')
 const {keyDAO} = require('./KeyDAO')
 const http = require('http')
 const app = express()
-let addressArr = []
+let cosmosAddressArr = [],irisAddressArr = []
 app.all('*', function (req, res, next) {
 	res.header('Access-Control-Allow-Origin', '*');
 	//Access-Control-Allow-Headers ,可根据浏览器的F12查看,把对应的粘贴在这里就行
@@ -32,10 +32,19 @@ const {
 } = process.env
 
 app.get('/api/faucet',(req,res)=>{
-	addressArr.unshift({
-		address:req.query.address,
-		networkName:req.query.network
-	})
+	if(req.query.network === 'cosmos'){
+		cosmosAddressArr.unshift({
+			address:req.query.address,
+			networkName:req.query.network
+		})
+	}
+	if(req.query.network === 'iris'){
+		irisAddressArr.unshift({
+			address:req.query.address,
+			networkName:req.query.network
+		})
+	}
+	
 	res.send({
 		code:0,
 		message:'summit success'
@@ -73,18 +82,53 @@ const irisBaseTx = {
 	password:PASSWORD,
 	mode:'async'
 }
-let time = 0
+
+let cosmosTime = 0 ,irisTime = 0,cosmosFailedAddressArr = [],irisFailedAddressArr = []
+
 
 setInterval(() => {
-	if(addressArr.length){
-		if(time === 0){
-			sentBanlance(addressArr[addressArr.length - 1])
+	if(cosmosAddressArr.length){
+		if(cosmosTime === 0){
+			sendCosmosToken(cosmosAddressArr[cosmosAddressArr.length - 1])
+		}
+	}
+	if(irisAddressArr.length){
+		if(irisTime === 0){
+			sendIrisToken(irisAddressArr[irisAddressArr.length - 1])
 		}
 	}
 },1000)
 
-async function sentBanlance (addressObj) {
-	console.log(addressObj)
+async function sendIrisToken(addressObj){
+	if(addressObj.networkName === 'iris'){
+		await irisClient.bank.send(
+			addressObj.address,
+			[{
+				denom:IRIS_DENOM,
+				amount:IRIS_SEND_NUMBER
+			}],
+			irisBaseTx
+		).then(res => {
+			if(res.hash){
+				irisAddressArr.pop()
+			}
+		}).catch(e => {
+			irisTime++
+			if(irisTime < 3){
+				sendIrisToken(addressObj.address)
+			}else {
+				irisFailedAddressArr.push({
+					address:addressObj.address,
+					err:JSON.stringify(e)
+				})
+				irisTime = 0
+			}
+			console.log(irisFailedAddressArr,'iris send tx failed')
+		})
+	}
+}
+
+async function sendCosmosToken (addressObj) {
 	if(addressObj.networkName === 'cosmos'){
 		await cosmosClient.bank.send(
 			addressObj.address,
@@ -95,38 +139,20 @@ async function sentBanlance (addressObj) {
 			cosmosBaseTx
 		).then(res => {
 			if(res.hash){
-				addressArr.pop()
+				cosmosAddressArr.pop()
 			}
 		}).catch(e => {
-			time++
-			if(time < 3){
-				sentBanlance(addressObj.address)
+			cosmosTime++
+			if(cosmosTime < 3){
+				sendCosmosToken(addressObj.address)
 			}else {
-				time = 0
+				cosmosTime = 0
+				cosmosFailedAddressArr.push({
+					address:addressObj.address,
+					err:JSON.stringify(e)
+				})
 			}
-			console.log(e,'cosmos send tx failed')
-			
-		})
-	}else {
-		await irisClient.bank.send(
-			addressObj.address,
-			[{
-				denom:IRIS_DENOM,
-				amount:IRIS_SEND_NUMBER
-			}],
-			irisBaseTx
-		).then(res => {
-			if(res.hash){
-				addressArr.pop()
-			}
-		}).catch(e => {
-			time++
-			if(time < 3){
-				sentBanlance(addressObj.address)
-			}else {
-				time = 0
-			}
-			console.log(e,'iris send tx failed')
+			console.log(cosmosFailedAddressArr,'cosmos send tx failed')
 		})
 	}
 	
