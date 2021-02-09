@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "pm2": "pm2 start index.js"
+    "pm2": "pm2 link yhhs8obewrp4r3u my4ot63grnvpzkp & pm2 start index.js"
   },
   "repository": {
     "type": "git",
@@ -19,8 +19,8 @@
   },
   "homepage": "https://github.com/jinbiao-bianjie/faucet#readme",
   "dependencies": {
-    "gaia-sdk-js": "git+https://github.com/irisnet/gaia-sdk-js.git#main",
-    "irishub-sdk-js": "git+https://github.com/irisnet/irishub-sdk-js.git#develop",
+    "gaia-sdk-js": "git+https://github.com/irisnet/gaia-sdk-js.git#829bbbe0dd0b83a8dc8d8afd8c5204472ae74316",
+    "irishub-sdk-js":"git+https://github.com/irisnet/irishub-sdk-js.git#8e7541a11ea6d0c50d117fb3937b9e211a6c9b91",
     "request": "^2.88.0",
     "express": "^4.17.1",
     "commander": "^3.0.2",
