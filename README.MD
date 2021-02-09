@@ -1,6 +1,6 @@
 ### Faucet
 
-#step
+## step
 - 1 设置环境变量
 
 COSMOS_NODE 
