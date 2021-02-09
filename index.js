@@ -100,6 +100,7 @@ setInterval(() => {
 },1000)
 
 async function sendIrisToken(addressObj){
+	irisTime++
 	if(addressObj.networkName === 'iris'){
 		await irisClient.bank.send(
 			addressObj.address,
@@ -109,26 +110,32 @@ async function sendIrisToken(addressObj){
 			}],
 			irisBaseTx
 		).then(res => {
-			if(res.hash){
+			irisTime = 0
+			
+			if(res && res.hash){
 				irisAddressArr.pop()
+			}else {
+				irisAddressArr.unshift(addressObj)
 			}
 		}).catch(e => {
 			irisTime++
-			if(irisTime < 3){
-				sendIrisToken(addressObj.address)
+			if(irisTime < 4){
+				sendIrisToken(addressObj)
 			}else {
 				irisFailedAddressArr.push({
 					address:addressObj.address,
 					err:JSON.stringify(e)
 				})
 				irisTime = 0
+				console.log(irisFailedAddressArr,'iris send tx failed')
+				
 			}
-			console.log(irisFailedAddressArr,'iris send tx failed')
 		})
 	}
 }
 
 async function sendCosmosToken (addressObj) {
+	cosmosTime++
 	if(addressObj.networkName === 'cosmos'){
 		await cosmosClient.bank.send(
 			addressObj.address,
@@ -138,21 +145,24 @@ async function sendCosmosToken (addressObj) {
 			}],
 			cosmosBaseTx
 		).then(res => {
-			if(res.hash){
+			cosmosTime = 0
+			if(res && res.hash){
 				cosmosAddressArr.pop()
+			}else {
+				cosmosAddressArr.unshift(addressObj)
 			}
 		}).catch(e => {
 			cosmosTime++
-			if(cosmosTime < 3){
-				sendCosmosToken(addressObj.address)
+			if(cosmosTime < 4){
+				sendCosmosToken(addressObj)
 			}else {
-				cosmosTime = 0
 				cosmosFailedAddressArr.push({
 					address:addressObj.address,
 					err:JSON.stringify(e)
 				})
+				cosmosTime = 0
+				console.log(cosmosFailedAddressArr,'cosmos send tx failed')
 			}
-			console.log(cosmosFailedAddressArr,'cosmos send tx failed')
 		})
 	}
 	
